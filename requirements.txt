@@ -1,4 +1,4 @@
 ImageHash
-Pillow
+Pillow==9.5.0
 imagedominantcolor
-yt-dlp
+#yt-dlp
