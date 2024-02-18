@@ -66,7 +66,6 @@ class VideoHash:
 
         :rtype: NoneType
         """
-        self.path = path
         self.url = url
 
         self.storage_path = ""
@@ -77,6 +76,12 @@ class VideoHash:
         self.download_worst = download_worst
         self.frame_interval = frame_interval
 
+        if self.path or self.url:
+            self.vhash(path)
+            self.delete_storage_path()
+        
+    def vhash(self, path):
+        self.path = path
         self.task_uid = VideoHash._get_task_uid()
 
         self._create_required_dirs_and_check_for_errors()
@@ -108,6 +113,7 @@ class VideoHash:
         self.video_duration = video_duration(self.video_path)
 
         self._calc_hash()
+        return self.hash_hex
 
     def __str__(self) -> str:
         """
@@ -255,6 +261,16 @@ class VideoHash:
             "To calculate difference both of the hashes must be either "
             + "hexadecimal/binary strings or instance of VideoHash class."
         )
+    
+    def compare_hash(self, first: str, second: str) -> int:
+        similarity_score = self.hamming_distance(
+            string_a=VideoHash.hex2bin(first.lower(), self.bits_in_hash),
+            string_b=VideoHash.hex2bin(second.lower(), self.bits_in_hash),
+        )
+        if similarity_score <= ceil((self.similar_percentage / 100) * self.bits_in_hash):
+            return True
+        else:
+            return False
 
     def _copy_video_to_video_dir(self) -> None:
         """
@@ -282,13 +298,13 @@ class VideoHash:
             # create a copy of the video at self.storage_path
             match = re.search(r"\.([^.]+$)", self.path)
 
-            if match:
-                extension = match.group(1)
+            # if match:
+            #     extension = match.group(1)
 
-            else:
-                raise ValueError("File name (path) does not have an extension.")
+            # else:
+            #     raise ValueError("File name (path) does not have an extension.")
 
-            self.video_path = os.path.join(self.video_dir, (f"video.{extension}"))
+            self.video_path = os.path.join(self.video_dir, "video")
 
             shutil.copyfile(self.path, self.video_path)
 
